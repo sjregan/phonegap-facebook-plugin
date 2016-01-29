@@ -61,6 +61,9 @@
 - (void)applicationDidBecomeActive {
     // Call the 'activateApp' method to log an app event for use in analytics and advertising reporting.
     [FBAppEvents activateApp];
+	
+	// Handle the user switching back to the app without logging in or cancelling within facebook
+	[[FBSession activeSession] handleDidBecomeActive]
 }
 
 /*
