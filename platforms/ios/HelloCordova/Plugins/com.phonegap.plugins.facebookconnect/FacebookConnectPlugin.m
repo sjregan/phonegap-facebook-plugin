@@ -63,7 +63,7 @@
     [FBAppEvents activateApp];
 	
 	// Handle the user switching back to the app without logging in or cancelling within facebook
-	[[FBSession activeSession] handleDidBecomeActive]
+	[[FBSession activeSession] handleDidBecomeActive];
 }
 
 /*
