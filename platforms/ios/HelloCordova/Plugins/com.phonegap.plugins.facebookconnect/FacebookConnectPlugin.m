@@ -321,16 +321,27 @@
         // Initial log in, can only ask to read
         // type permissions
         if ([self areAllPermissionsReadPermissions:permissions]) {
-            [FBSession
-             openActiveSessionWithReadPermissions:permissions
-             allowLoginUI:YES
-             completionHandler:^(FBSession *session,
-                                 FBSessionState state,
-                                 NSError *error) {
-                 [self sessionStateChanged:session
-                                     state:state
-                                     error:error];
-             }];
+			FBSessionStateHandler completionHandler = ^(FBSession *session, FBSessionState status, NSError *error) {
+				[self sessionStateChanged:session state:status error:error];
+			};
+
+			if ([FBSession activeSession].state == FBSessionStateCreatedTokenLoaded) {
+				// we have a cached token, so open the session
+				[[FBSession activeSession] openWithBehavior:FBSessionLoginBehaviorUseSystemAccountIfPresent
+					completionHandler:completionHandler];
+			} else {
+				[FBSession.activeSession closeAndClearTokenInformation];
+				[FBSession renewSystemCredentials:^(ACAccountCredentialRenewResult result, NSError *error) {
+					NSLog(@"%@", error);
+				}];
+				[FBSession setActiveSession:nil];
+				
+				// create a new facebook session
+				FBSession *fbSession = [[FBSession alloc] initWithPermissions:permissions];
+				[FBSession setActiveSession:fbSession];
+				[fbSession openWithBehavior:FBSessionLoginBehaviorUseSystemAccountIfPresent
+						  completionHandler:completionHandler];
+			}
         } else {
             permissionsAllowed = NO;
             permissionsErrorMessage = @"You can only ask for read permissions initially";
